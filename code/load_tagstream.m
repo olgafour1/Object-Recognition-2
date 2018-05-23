@@ -14,12 +14,13 @@ function [tags]=load_tagstream(tagstream_file, allowed_tags);
 %
 % Author: Sebastian Nowozin <Sebastian.Nowozin@microsoft.com>
 fid=fopen(tagstream_file,'r');
-A=textscan(fid,'%s;%s','Whitespace',';');
+A=textscan(fid,'%s %s','Whitespace',';');
 fclose(fid);
+%%%% keyboard;
 if ~strcmp(A{1}(1),'XQPCTick') || ~strcmp(A{2}(1),'Tag')
 	error(['Invalid tagstream file format']);
 end
-
+%keyboard;
 tags=struct('xqpctick', num2cell(cellfun(@(x)(sscanf(x,'%lu')),A{1}(2:end))), ...
 	'timestamp_usec', ...
 		num2cell(cellfun(@(x)((sscanf(x,'%lu')*1000 + 49875/2)/49875),...
