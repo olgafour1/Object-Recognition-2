@@ -1,5 +1,6 @@
 
 %[data, tagset] = loadAll();
+
 chosen_classModel = 5;
 chosen_class = 0; % class = 0 -> all labels
 [mod] = getSamples(data, chosen_classModel); % to get model gesture from different class
@@ -76,8 +77,8 @@ tagset=[];
 for i= 1:size(files)
     file_basename = files(i).name(1:end-4);
     try
-        [X,Y,itagset]=load_file(file_basename, discard_zero_frames);
         disp(file_basename);
+        [X,Y,itagset]=load_file(file_basename, discard_zero_frames);
         data(i).X = X;
         data(i).Y = Y;
         tagset = [tagset, itagset];
@@ -151,25 +152,4 @@ end
 % c. the resulting variable "gt" is a structure composed of the following vectors:
 % subSeq = sequence cuts size(n_ gestures,80) where 80 is 20xXYZV
 % indices = beg-end frames of each sequence size(n_ gestures)
-end
-
-function [gest, ngest] = gestureCuts(dataX, dataY)
-% "ngest" is the number of gesture and 
-% "gest" is a list of gestures, of size (ngest,3), consisting of a gesture label,
-% and a beginning and end frame
-
-label = 0;  % number refering to G<label> in tagset
-gest = [];
-for i = 1:12
-    if(size(dataY(:,i))>0) % check if nonempty
-        [pks,locs] = findpeaks(dataY(:,i));
-        if(size(locs)>0)
-            label = i;
-            for f = 2:2:size(locs)
-                gest(f,:) = [label, locs(f-1), locs(f)];
-            end
-        end
-    end
-end
-ngest = size(gest, 1);
 end

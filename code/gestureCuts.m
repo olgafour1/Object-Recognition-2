@@ -10,8 +10,9 @@ for i = 1:12
         [pks,locs] = findpeaks(dataY(:,i));
         if(size(locs)>0)
             label = i;
-            for f = 2:2:size(locs)
-                gest(f,:) = [label, locs(f-1), locs(f)];
+            
+            for k = 2:1:size(locs)
+                gest(k-1,:) = [label, locs(k-1), locs(k)];
             end
         end
     end
