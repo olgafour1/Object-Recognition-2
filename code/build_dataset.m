@@ -23,7 +23,7 @@ for i=1:length(data)
    %fprintf('%d\n', gest(1, 2));
    
    for k=1:ngest
-       gest = gestures(k, :)
+       gest = gestures(k, :);
        
        sample = data(i).X(gest(2):gest(3), mask1);
        
