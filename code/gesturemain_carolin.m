@@ -69,17 +69,21 @@ end
 
 function [data, tagset] = loadAll()
 %cd('D:/Carol/Documents/MATLAB/OR/gesture');
-files = dir(strcat('D:/Carol/Documents/MATLAB/OR/gesture/data/MicrosoftGestureDataset-RC/data/*.csv'));
+files = dir(strcat('../data/*.csv'));
 discard_zero_frames = 1;
 tagset=[];
 
 for i= 1:size(files)
     file_basename = files(i).name(1:end-4);
-    [X,Y,itagset]=load_file(file_basename, discard_zero_frames);
-    disp(file_basename);
-    data(i).X = X;
-    data(i).Y = Y;
-    tagset = [tagset, itagset];
+    try
+        [X,Y,itagset]=load_file(file_basename, discard_zero_frames);
+        disp(file_basename);
+        data(i).X = X;
+        data(i).Y = Y;
+        tagset = [tagset, itagset];
+    catch
+        fprintf('error loading %s', file_basename);
+    end
 end    
 
 %data: structure containing 594 sequences described by the vectors X and Y
@@ -97,6 +101,10 @@ for n =1:80
 end
 
 for i = 1:size(data,2) % i = sequences
+    if size(data(i).X, 1) == 0
+        continue
+    end
+    
     [gest, ngest] = gestureCuts(data(i).X, data(i).Y);
     % b:
     subSeq = []; % size(ngest, 80)
