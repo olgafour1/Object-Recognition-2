@@ -4,3 +4,5 @@ data
 *.zip
 .directory
 *.m~
+*.asv
+*.c

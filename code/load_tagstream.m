@@ -14,7 +14,6 @@ function [tags]=load_tagstream(tagstream_file, allowed_tags);
 %
 % Author: Sebastian Nowozin <Sebastian.Nowozin@microsoft.com>
 fid=fopen(tagstream_file,'r');
-%disp(tagstream_file)
 A=textscan(fid,'%s %s','Whitespace',';');
 fclose(fid);
 %%%% keyboard;
