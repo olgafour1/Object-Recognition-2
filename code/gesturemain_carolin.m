@@ -121,7 +121,7 @@ for i = 1:size(data,2) % i = sequences
 %                     indices = [indices; gest(g,1:3)];
                     subSeq = data(i).X(beginframe:endframe,:);
                     indices = gest(g,1:3);
-                    gt(end+1).subSeq = subSeq(mask1);
+                    gt(end+1).subSeq = subSeq(:, mask1);
                     gt(end).indices = indices;
                 end
             elseif (gest(g,1) == chosen_class) % gest(g,1) = gesture label            
@@ -132,7 +132,7 @@ for i = 1:size(data,2) % i = sequences
 %                     indices = [indices; gest(g,1:3)]; % with gesture label (gest(g,1))
                     subSeq = data(i).X(beginframe:endframe,:);
                     indices = gest(g,1:3);
-                    gt(end+1).subSeq = subSeq(mask1);
+                    gt(end+1).subSeq = subSeq(:, mask1);
                     gt(end).indices = indices;
                 end
             end 
