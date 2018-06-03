@@ -23,24 +23,28 @@ for selected_class = 1:num_classes
     fprintf('class: %d\n', selected_class);
     fprintf('################\n');
     if find_models
-        [model, model2] = get_models(train_samples, train_labels, selected_class);
-    else
-       %model = train_samples{2028}; 
-       %model2 = train_samples{20}; 
+        models = get_models(train_samples, train_labels, selected_class, 5);
+        model = models{1};
     end
 
     %% train SVM
     if train_model
-        [X, Y] = obtain_distances_and_labels(train_samples, train_labels, model, selected_class);
+        [X, Y] = obtain_multi_distances_and_labels(train_samples, train_labels, models, selected_class);
         num_ones = length(Y(Y==1));
         num_zeros = length(Y(Y==0));
 
-        threshold = obtain_optimal_threshold(X, Y);
-        fprintf('threshold: %f\n', threshold);
+        thresholds = [];
+        fvals = [];
+        for i = 1:length(models)
+            [thresholds(i), fvals(i)] = obtain_optimal_threshold(X(:,i), Y);
+        end
+        [~, best_model_idx] = min(fvals);
+        fprintf('best model: %d  threshold: %f\n', best_model_idx, thresholds(best_model_idx));
+        best_model = models{best_model_idx};
     end
 
     fprintf('obtain test samples \n');
-    [X, Y] = obtain_distances_and_labels(test_samples, test_labels, model, selected_class);
+    [X, Y] = obtain_distances_and_labels(test_samples, test_labels, best_model, selected_class);
 
     fprintf('predict \n');
 
@@ -58,16 +62,18 @@ for selected_class = 1:num_classes
 
 end
 
+fprintf('\n');
 for i = 1:length(f_measure)
     fprintf('class %d: F1: %0.2f \n', i, f_measure(i));
 end
 
-function threshold = obtain_optimal_threshold(X, Y)
-    %get_f1 = @(e)e(6);
-    opt_fun = @(e)(e(4)-e(5))^2 - e(6)*5;
+fprintf('\naverage F1: %0.2f\n', mean(f_measure));
+
+function [threshold, fval] = obtain_optimal_threshold(X, Y)
+    opt_fun = @(e)((e(4)-e(5))^2 - e(6)*5);
     fun = @(thr)opt_fun(Evaluate(Y, X < thr));
     
-    threshold = fminsearch(fun, 200);
+    [threshold, fval] = fminsearch(fun, 200);
 end
 
 function [X, Y] = obtain_distances_and_labels(samples, labels, model, selected_class)
@@ -82,19 +88,45 @@ function [X, Y] = obtain_distances_and_labels(samples, labels, model, selected_c
     end
 end
 
-function [model, model2] = get_models(samples, labels, selected_class)
-    for i=1:length(samples)
+function [X, Y] = obtain_multi_distances_and_labels(samples, labels, models, selected_class)
+    num_models = length(models);
+    X = zeros(length(samples), num_models);
+    Y = zeros(length(samples), 1);
+    
+    parfor i = 1:length(samples)
+        sample = samples{i};
+        Xrow = zeros(1, num_models);
+        for j = 1:num_models
+            Xrow(j) = dtw(models{j}, sample, 1);
+        end
+        X(i, :) = Xrow;
         if labels(i) == selected_class
-            model = samples{i};
-            model_idx = i;
-            break;
+            Y(i) = 1;
         end
     end
+end
 
-    for i=fix(length(samples)/2):length(samples)
+function [X, Y] = obtain_multi_distances_and_labels_old(samples, labels, model, selected_class)
+    num_joints = 20;
+    X = zeros(length(samples), num_joints);
+    Y = zeros(length(samples), 1);
+    
+    parfor i = 1:length(samples)
+        sample = samples{i};
+        Xrow = zeros(1, num_joints);
+        for j = 0:num_joints-1
+            range = j*3+1:j*3+3;
+            Xrow(j+1) = dtw(model(:,range), sample(:,range), 1);
+        end
+        X(i, :) = Xrow;
         if labels(i) == selected_class
-            model2 = samples{i};
-            model2_idx = i;
+            Y(i) = 1;
         end
     end
+end
+
+function [models] = get_models(samples, labels, selected_class, count)
+    models = samples(labels == selected_class);
+    models = models(randperm(length(models)));
+    models = models(1:count);
 end
