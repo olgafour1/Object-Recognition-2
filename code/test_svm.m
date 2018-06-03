@@ -28,15 +28,28 @@ if train_model
     num_zeros = length(Y(Y==0))
     fprintf('fitting svm \n');
     
-    c=[0 1; 3 0];
-    SVMModel = fitcsvm(X, Y,'KernelFunction','linear','Cost',c);
+    ind = Y==1;
+    X_0 = X(Y==0);
+    Y_0 = Y(Y==0);
+    
+    %X = [X(ind); X_0(1:min(length(X_0), sum(ind)))];
+    %Y = [Y(ind); Y_0(1:min(length(X_0), sum(ind)))];
+    
+    c=[0 1; 10 0];
+    %SVMModel = fitcsvm(X, Y,'KernelFunction','linear','Cost',c);
+    [B,dev,stats] = mnrfit(X,categorical(Y), 'Model', 'ordinal');
+    
+    B = [0.0001; 0];
 end
 
 fprintf('obtain test samples \n');
 [X, Y] = obtain_distances_and_labels(test_samples, test_labels, model, selected_class);
 
 fprintf('predict \n');
-y_pred = predict(SVMModel, X);
+%y_pred = predict(SVMModel, X);
+y_pred = mnrval(B, Y)
+[~, y_pred] = max(y_pred,[],2);
+y_pred = 1 - y_pred;
 
 Evaluate(Y, y_pred)
 
