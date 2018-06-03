@@ -14,6 +14,7 @@ if false
     parpool(c, c.NumWorkers);
 end
 
+used_thresholds = zeros(num_classes, 1);
 precision = zeros(num_classes, 1);
 recall = zeros(num_classes, 1);
 f_measure = zeros(num_classes, 1);
@@ -23,7 +24,7 @@ for selected_class = 1:num_classes
     fprintf('class: %d\n', selected_class);
     fprintf('################\n');
     if find_models
-        models = get_models(train_samples, train_labels, selected_class, 5);
+        models = get_models(train_samples, train_labels, selected_class, 10);
         model = models{1};
     end
 
@@ -38,9 +39,10 @@ for selected_class = 1:num_classes
         for i = 1:length(models)
             [thresholds(i), fvals(i)] = obtain_optimal_threshold(X(:,i), Y);
         end
-        [~, best_model_idx] = min(fvals);
+        [~, best_model_idx] = min(fvals); %max(thresholds); %
         fprintf('best model: %d  threshold: %f\n', best_model_idx, thresholds(best_model_idx));
         best_model = models{best_model_idx};
+        threshold = thresholds(best_model_idx);
     end
 
     fprintf('obtain test samples \n');
@@ -55,6 +57,8 @@ for selected_class = 1:num_classes
     precision(selected_class) = eval(4);
     recall(selected_class) = eval(5);
     f_measure(selected_class) = eval(6);
+    
+    used_thresholds(selected_class) = threshold;
 
     fprintf('precision: %0.2f\n', precision(selected_class));
     fprintf('recall: %0.2f\n', recall(selected_class));
@@ -69,6 +73,11 @@ end
 
 fprintf('\naverage F1: %0.2f\n', mean(f_measure));
 
+for i = 1:length(f_measure)
+    fprintf('class %d & %0.2f & %0.2f & %0.2f & %0.2f \\\\ \n', i, used_thresholds(i), precision(i), recall(i), f_measure(i));
+end
+fprintf('\naverage & %0.2f & %0.2f & %0.2f & %0.2f \n', mean(used_thresholds), mean(precision), mean(recall), mean(f_measure));
+
 function [threshold, fval] = obtain_optimal_threshold(X, Y)
     opt_fun = @(e)((e(4)-e(5))^2 - e(6)*5);
     fun = @(thr)opt_fun(Evaluate(Y, X < thr));
@@ -82,6 +91,7 @@ function [X, Y] = obtain_distances_and_labels(samples, labels, model, selected_c
     
     parfor i = 1:length(samples)
         X(i) = dtw(model, samples{i}, 1);
+        %X(i) = multi_dwt(model, samples{i}, 'euclidean');
         if labels(i) == selected_class
             Y(i) = 1;
         end
@@ -98,6 +108,7 @@ function [X, Y] = obtain_multi_distances_and_labels(samples, labels, models, sel
         Xrow = zeros(1, num_models);
         for j = 1:num_models
             Xrow(j) = dtw(models{j}, sample, 1);
+            %Xrow(j) = multi_dwt(models{j}, sample, 'euclidean');
         end
         X(i, :) = Xrow;
         if labels(i) == selected_class
