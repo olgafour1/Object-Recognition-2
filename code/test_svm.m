@@ -35,11 +35,11 @@ if train_model
     %X = [X(ind); X_0(1:min(length(X_0), sum(ind)))];
     %Y = [Y(ind); Y_0(1:min(length(X_0), sum(ind)))];
     
-    c=[0 1; 10 0];
+    %c=[0 1; 10 0];
     %SVMModel = fitcsvm(X, Y,'KernelFunction','linear','Cost',c);
-    [B,dev,stats] = mnrfit(X,categorical(Y), 'Model', 'ordinal');
+    %[B,dev,stats] = mnrfit(X,categorical(Y), 'Model', 'ordinal');
     
-    B = [0.0001; 0];
+    %B = [0.0001; 0];
 end
 
 fprintf('obtain test samples \n');
@@ -47,11 +47,32 @@ fprintf('obtain test samples \n');
 
 fprintf('predict \n');
 %y_pred = predict(SVMModel, X);
-y_pred = mnrval(B, Y)
-[~, y_pred] = max(y_pred,[],2);
-y_pred = 1 - y_pred;
+%y_pred = mnrval(B, Y)
+%[~, y_pred] = max(y_pred,[],2);
+%y_pred = 1 - y_pred;
 
-Evaluate(Y, y_pred)
+threshold = obtain_optimal_threshold(X, Y)
+
+y_pred = X < threshold;
+
+eval = Evaluate(Y, y_pred)
+
+precision = eval(4);
+recall = eval(5);
+f_measure = eval(6);
+
+fprintf('precision: %0.2f\n', precision);
+fprintf('recall: %0.2f\n', recall);
+fprintf('f_measure: %0.2f\n', f_measure);
+
+
+function threshold = obtain_optimal_threshold(X, Y)
+    %get_f1 = @(e)e(6);
+    opt_fun = @(e)(e(4)-e(5))^2 - e(6)*5;
+    fun = @(thr)opt_fun(Evaluate(Y, X < thr));
+    
+    threshold = fminsearch(fun, 100);
+end
 
 function [X, Y] = obtain_distances_and_labels(samples, labels, model, selected_class)
     X = zeros(length(samples), 1);
