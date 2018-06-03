@@ -1,11 +1,11 @@
 
 %[data, tagset] = loadAll();
 
-chosen_classModel = 5;
+chosen_classModel = 10;
 chosen_class = 0; % class = 0 -> all labels
 [mod] = getSamples(data, chosen_classModel); % to get model gesture from different class
 [gt] = getSamples(data, chosen_class);
-model = mod(10); % model sample (gt->same class; mod->other class)
+model = mod(1); % model sample (gt->same class; mod->other class)
 
 
 %t = gt(20,1:80);
@@ -16,7 +16,7 @@ model = mod(10); % model sample (gt->same class; mod->other class)
                 %      if s(i) is matched with t(j) then |i-j|<=w
                 % d: resulting distance
 %disp(d);
-threshold = 200;
+threshold = 0;
 [acc, avdist] = classification(model, gt, threshold);
 
 disp("accuracy: ");
@@ -64,8 +64,11 @@ for i=1:size(gtdata,2)
     end
 end
 
-avdist = vpa(dist/(size(gtdata,2)-1));
-accuracy = vpa(score/(size(gtdata,2)-1));
+%avdist = vpa(dist/(size(gtdata,2)-1));
+avdist = dist/(size(gtdata,2)-1);
+accuracy = score/(size(gtdata,2)-1);
+disp(score)
+disp(size(gtdata,2))
 end
 
 function [data, tagset] = loadAll()
